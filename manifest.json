@@ -1,0 +1,23 @@
+{
+  "name": "Jira Issue Icon Color Randomizer",
+  "description": "Enhances Jira readability by assigning random colors to issue icons, making it easier to distinguish tickets at a glance.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.atlassian.net/*",
+        "https://*.jira.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*",
+    "https://*.jira.com/*"
+  ],
+  "icons": {
+    "128": "favicon.png"
+  }
+}
