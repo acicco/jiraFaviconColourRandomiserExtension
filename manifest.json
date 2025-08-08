@@ -1,5 +1,5 @@
 {
-  "name": "Jira Issue Icon Color Randomizer",
+  "name": "Jira Favicon Icon Color Randomizer",
   "description": "Enhances Jira readability by assigning random colors to issue icons, making it easier to distinguish tickets at a glance.",
   "version": "1.0",
   "manifest_version": 3,
