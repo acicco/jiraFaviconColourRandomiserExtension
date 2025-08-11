@@ -18,26 +18,23 @@ const JIRA_SVG_PATHS = `
 `;
 
 /**
- * Generates a consistent HSL color based on a string input (e.g., document title).
+ * Generates a consistent HSL color based on a string input (e.g., document URL).
  * Ensures color variety and contrast for the SVG logo.
  * @param {string} inputString - The string to hash for color generation.
  * @returns {{backgroundColor: string, svgColor: string}}
  */
-const generateColorFromTitle = (inputString) => {
+const generateColorFromInput = (inputString) => {
   let hash = 0;
   for (let i = 0; i < inputString.length; i++) {
     hash = inputString.charCodeAt(i) + ((hash << 5) - hash);
   }
 
   const hue = hash % 360;
-  // Ensure good saturation and lightness for variety and vibrancy
   const saturation = 75 + (hash % 20); // 75-95%
   const lightness = 50 + (hash % 10);  // 50-60%
 
   const backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 
-  // Determine if the background color is light or dark for contrast
-  // If lightness is > 55%, use black for the SVG, else white.
   const svgColor = (lightness > 55) ? 'black' : 'white';
 
   return { backgroundColor, svgColor };
@@ -79,11 +76,11 @@ const getOrCreateFaviconElement = () => {
  */
 const updateFavicon = () => {
   const favicon = getOrCreateFaviconElement();
-  const { backgroundColor, svgColor } = generateColorFromTitle(document.title);
+  // Use document.URL for color generation
+  const { backgroundColor, svgColor } = generateColorFromInput(document.URL);
   const newSvg = createJiraFaviconSvg(backgroundColor, svgColor);
   const newIconUrl = `data:image/svg+xml;base64,${btoa(newSvg)}`;
 
-  // Only update if the URL has changed to prevent unnecessary DOM manipulation
   if (favicon.href !== newIconUrl) {
     favicon.href = newIconUrl;
   }
@@ -94,17 +91,16 @@ const updateFavicon = () => {
 // Run the favicon update immediately when the script loads
 updateFavicon();
 
-// Set up a MutationObserver to re-run the update if the document title changes.
-// This is crucial for single-page applications like Jira where the title can change dynamically.
-const titleElement = document.querySelector('title');
-if (titleElement) {
-  const observer = new MutationObserver((mutations) => {
-    // Check if the title content has changed
-    const titleChanged = mutations.some(m => m.target.nodeName === 'TITLE' && m.type === 'childList');
-    if (titleChanged) {
-      updateFavicon();
-    }
-  });
+// Set up a MutationObserver to re-run the update if the document URL changes.
+// This is crucial for single-page applications like Jira where the URL can change dynamically.
+const observer = new MutationObserver((mutations) => {
+  // Check if the URL changed (by observing the title, which often reflects URL changes in SPAs)
+  // Or, more directly, if the favicon itself is replaced by the page after initial load.
+  const urlChanged = mutations.some(m => m.target.nodeName === 'TITLE' || (m.target.nodeName === 'LINK' && m.target.rel.includes('icon')));
+  if (urlChanged) {
+    updateFavicon();
+  }
+});
 
-  observer.observe(titleElement, { childList: true });
-}
+// Observe the head for changes to the title or favicon link
+observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
